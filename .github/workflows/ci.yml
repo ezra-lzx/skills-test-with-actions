@@ -8,33 +8,18 @@ on:
   workflow_dispatch:
 
 jobs:
-  build:
-    runs-on: ubuntu-latest
+ build:
+  runs-on: ubuntu-latest
+  steps:
+    - uses: actions/checkout@v4
 
-    steps:
-      - name: Checkout repo
-        uses: actions/checkout@v4
+    - name: Run markdown lint
+      run: |
+        npm install remark-cli remark-preset-lint-consistent vfile-reporter-json
+        npx remark . --use remark-preset-lint-consistent --report vfile-reporter-json 2> remark-lint-report.json
 
-      - name: Setup Node
-        uses: actions/setup-node@v4
-        with:
-          node-version: 20
-          # cache removed to avoid lockfile error
-
-      - name: Install remark lint
-        run: |
-          npm init -y
-          npm install --no-audit --no-fund --silent remark-cli remark-preset-lint-consistent
-
-      - name: Run markdown lint
-        # If remark finds issues it will fail this step (expected), but we still upload the report next.
-        run: |
-          set -euo pipefail
-          npx remark . --use remark-preset-lint-consistent --frail | tee remark-report.txt
-
-      - name: Upload lint report
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: remark-report
-          path: remark-report.txt
+    - uses: actions/upload-artifact@v4
+      with:
+        name: remark-lint-report
+        path: remark-lint-report.json
+          
